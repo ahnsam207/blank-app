@@ -1,6 +1,7 @@
 import base64
 import io
 import math
+import os
 import random
 import time
 import wave
@@ -74,9 +75,17 @@ def play_audio(sound_bytes):
 
 
 def load_wordbook(uploaded_file):
+    ext = os.path.splitext(uploaded_file.name)[1].lower()
+    engine = None
+    if ext == ".xlsx":
+        engine = "openpyxl"
+    elif ext == ".xls":
+        engine = "xlrd"
+
     try:
-        df = pd.read_excel(uploaded_file, header=None, engine="openpyxl")
-    except Exception:
+        df = pd.read_excel(uploaded_file, header=None, engine=engine)
+    except Exception as exc:
+        st.error(f"단어장 파일을 읽는 중 오류가 발생했습니다: {exc}")
         return []
 
     entries = []
@@ -123,7 +132,7 @@ def create_options(correct_word, entries):
     return options
 
 
-uploaded_file = st.file_uploader("엑셀 영어 단어장 선택", type=["xlsx"])
+uploaded_file = st.file_uploader("엑셀 영어 단어장 선택", type=["xlsx", "xls"])
 
 if uploaded_file:
     if (
