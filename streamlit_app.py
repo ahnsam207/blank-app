@@ -84,6 +84,14 @@ def load_wordbook(uploaded_file):
 
     try:
         df = pd.read_excel(uploaded_file, header=None, engine=engine)
+    except ImportError as exc:
+        if engine == "openpyxl":
+            st.error("openpyxl 패키지가 설치되어 있지 않습니다. .venv를 활성화한 뒤 `python -m pip install openpyxl` 또는 `pip install openpyxl`을 실행하세요.")
+        elif engine == "xlrd":
+            st.error("xlrd 패키지가 설치되어 있지 않습니다. .venv를 활성화한 뒤 `python -m pip install xlrd` 또는 `pip install xlrd`을 실행하세요.")
+        else:
+            st.error(f"단어장 파일을 읽는 중 ImportError가 발생했습니다: {exc}")
+        return []
     except Exception as exc:
         st.error(f"단어장 파일을 읽는 중 오류가 발생했습니다: {exc}")
         return []
