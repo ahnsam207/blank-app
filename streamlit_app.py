@@ -24,6 +24,7 @@ if "questions" not in st.session_state:
     st.session_state.index = 0
     st.session_state.score = 0
     st.session_state.feedback = ""
+    st.session_state.answer_submitted = False
     st.session_state.finished = False
 
 st.title("🇬🇧 영어 단어 뜻 맞추기 게임")
@@ -37,6 +38,7 @@ if st.session_state.finished:
         st.session_state.index = 0
         st.session_state.score = 0
         st.session_state.feedback = ""
+        st.session_state.answer_submitted = False
         st.session_state.finished = False
     st.stop()
 
@@ -45,25 +47,38 @@ options = [correct_meaning] + random.sample(
     [meaning for word, meaning in VOCABULARY.items() if meaning != correct_meaning], 3
 )
 random.shuffle(options)
+options = ["선택하세요"] + options
 
 st.markdown(f"### 문제 {st.session_state.index + 1} / {len(st.session_state.questions)}")
 st.markdown(f"**{current_word}**")
 
 with st.form("quiz_form"):
-    selected_meaning = st.radio("뜻을 선택하세요", options, index=0)
-    submitted = st.form_submit_button("제출")
+    selected_meaning = st.radio(
+        "뜻을 선택하세요",
+        options,
+        index=0,
+        key=f"selected_{st.session_state.index}",
+        disabled=st.session_state.answer_submitted,
+    )
+    submitted = st.form_submit_button("제출", disabled=st.session_state.answer_submitted)
 
     if submitted:
-        if selected_meaning == correct_meaning:
-            st.session_state.feedback = "✅ 정답입니다!"
-            st.session_state.score += 1
+        if selected_meaning == "선택하세요":
+            st.warning("답을 선택한 뒤 제출해주세요.")
         else:
-            st.session_state.feedback = f"❌ 오답입니다. 정답은 **{correct_meaning}** 입니다."
+            if selected_meaning == correct_meaning:
+                st.session_state.feedback = "✅ 정답입니다!"
+                st.session_state.score += 1
+            else:
+                st.session_state.feedback = f"❌ 오답입니다. 정답은 **{correct_meaning}** 입니다."
+            st.session_state.answer_submitted = True
 
-        st.session_state.index += 1
-        if st.session_state.index >= len(st.session_state.questions):
-            st.session_state.finished = True
-
-if st.session_state.feedback:
+if st.session_state.answer_submitted:
     st.info(st.session_state.feedback)
     st.write(f"현재 점수: **{st.session_state.score}**")
+    if st.button("다음 문제로"):
+        st.session_state.index += 1
+        st.session_state.answer_submitted = False
+        st.session_state.feedback = ""
+        if st.session_state.index >= len(st.session_state.questions):
+            st.session_state.finished = True
