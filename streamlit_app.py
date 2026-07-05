@@ -24,7 +24,6 @@ if "questions" not in st.session_state:
     st.session_state.index = 0
     st.session_state.score = 0
     st.session_state.feedback = ""
-    st.session_state.selected = None
     st.session_state.finished = False
 
 st.title("🇬🇧 영어 단어 뜻 맞추기 게임")
@@ -38,12 +37,10 @@ if st.session_state.finished:
         st.session_state.index = 0
         st.session_state.score = 0
         st.session_state.feedback = ""
-        st.session_state.selected = None
         st.session_state.finished = False
     st.stop()
 
 current_word, correct_meaning = st.session_state.questions[st.session_state.index]
-
 options = [correct_meaning] + random.sample(
     [meaning for word, meaning in VOCABULARY.items() if meaning != correct_meaning], 3
 )
@@ -52,20 +49,20 @@ random.shuffle(options)
 st.markdown(f"### 문제 {st.session_state.index + 1} / {len(st.session_state.questions)}")
 st.markdown(f"**{current_word}**")
 
-st.session_state.selected = st.radio("뜻을 선택하세요", options, index=0)
+with st.form("quiz_form"):
+    selected_meaning = st.radio("뜻을 선택하세요", options, index=0)
+    submitted = st.form_submit_button("제출")
 
-if st.button("제출" ):
-    if st.session_state.selected == correct_meaning:
-        st.session_state.feedback = "✅ 정답입니다!"
-        st.session_state.score += 1
-    else:
-        st.session_state.feedback = f"❌ 오답입니다. 정답은 **{correct_meaning}** 입니다."
+    if submitted:
+        if selected_meaning == correct_meaning:
+            st.session_state.feedback = "✅ 정답입니다!"
+            st.session_state.score += 1
+        else:
+            st.session_state.feedback = f"❌ 오답입니다. 정답은 **{correct_meaning}** 입니다."
 
-    st.session_state.index += 1
-    if st.session_state.index >= len(st.session_state.questions):
-        st.session_state.finished = True
-    else:
-        st.experimental_rerun()
+        st.session_state.index += 1
+        if st.session_state.index >= len(st.session_state.questions):
+            st.session_state.finished = True
 
 if st.session_state.feedback:
     st.info(st.session_state.feedback)
